@@ -28,6 +28,10 @@ public abstract class Command {
 
     public abstract void execute(CommandExecutedEvent event);
 
+    public boolean isEnabled(CommandExecutedEvent event) {
+        return true;
+    }
+
     private void innerEmbed(Message message, String text, Color color) {
         message.editMessage(
                 new EmbedBuilder()

@@ -41,7 +41,9 @@ public class UserHelpCommand extends Command {
         builder.setTitle("Command list");
 
         userCommands.getCommands().forEach(command -> {
-            builder.addField(command.getLabel(), command.getDescription(), false);
+            if (command.isEnabled(event)) {
+                builder.addField(command.getLabel(), command.getDescription(), false);
+            }
         });
 
         event.getChannel().sendMessage(builder.build()).queue();

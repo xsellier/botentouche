@@ -5,6 +5,8 @@ import fr.alexpado.botregkey.Configuration;
 import fr.alexpado.botregkey.factory.Command;
 import fr.alexpado.botregkey.factory.CommandExecutedEvent;
 
+import org.json.JSONArray;
+
 public class GetKeyCommand extends Command {
 
     public GetKeyCommand(Bot bot) {
@@ -26,22 +28,40 @@ public class GetKeyCommand extends Command {
         try {
             Configuration configuration = event.getBot().getServerConfiguration(event.getGuild());
 
+            tryToFetchAKey(configuration, event);
+
             if(configuration.has("data.testers." + event.getAuthor().getId() + ".key")) {
+                final String message;
+
                 if(configuration.has("message")) {
-                    event.getAuthor().openPrivateChannel().queue(privateChannel -> {
-                        privateChannel.sendMessage(configuration.getString("message").replace("{key}", configuration.getString("data.testers." + event.getAuthor().getId() + ".key"))).queue();
-                    });
-                }else{
-                    event.getAuthor().openPrivateChannel().queue(privateChannel -> {
-                        privateChannel.sendMessage(event.getGuild().getOwner().getEffectiveName() + " has released the beta of his game ! Here is your key : " + configuration.getString("data.testers." + event.getAuthor().getId() + ".key")).queue();
-                    });
+                    message = configuration.getString("message").replace("{key}", configuration.getString("data.testers." + event.getAuthor().getId() + ".key"));
+                } else {
+                    message = event.getGuild().getOwner().getEffectiveName() + " has released the beta of his game ! Here is your key : " + configuration.getString("data.testers." + event.getAuthor().getId() + ".key");
                 }
+
+                event.getAuthor().openPrivateChannel().queue(privateChannel -> {
+                    privateChannel.sendMessage(message).queue();
+                });
             }else{
-                event.getChannel().sendMessage("You don't have any key to retrieve.").queue();
+                event.getChannel().sendMessage("Sorry, there is no beta key available.").queue();
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void tryToFetchAKey(Configuration configuration, CommandExecutedEvent event) {
+        if(!configuration.has("data.testers." + event.getAuthor().getId() + ".key") &&
+           configuration.has("config.autokey") && configuration.getBoolean("config.autokey")) {
+            JSONArray array = configuration.getJSONArray("data.keys");
+
+            for (int i = 0; i < array.length(); i++) {
+                if(!getBot().isKeyInUse(configuration, array.getString(i))) {
+                    configuration.put("data.testers." + event.getAuthor().getId() + ".key", array.getString(i));
+                    break;
+                }
+            }
         }
     }
 }

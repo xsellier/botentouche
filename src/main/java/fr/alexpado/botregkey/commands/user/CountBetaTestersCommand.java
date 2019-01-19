@@ -23,11 +23,26 @@ public class CountBetaTestersCommand extends Command {
     }
 
     @Override
+    public boolean isEnabled(CommandExecutedEvent event) {
+        try {
+            Configuration configuration = event.getBot().getServerConfiguration(event.getGuild());
+
+            return configuration.has("config.count") && configuration.getBoolean("config.count");
+        } catch (Exception e) {
+            event.getChannel().sendMessage("Something went wrong. Please contact the developer.").queue();
+            e.printStackTrace();
+
+            // Enable it by default
+            return true;
+        }
+    }
+
+    @Override
     public void execute(CommandExecutedEvent event) {
         try {
             Configuration configuration = event.getBot().getServerConfiguration(event.getGuild());
 
-            if(!configuration.has("config.count") || !configuration.getBoolean("config.count")) {
+            if(isEnabled(event)) {
                 event.getChannel().sendMessage("The count command is not allowed on this server.").queue();
                 return;
             }

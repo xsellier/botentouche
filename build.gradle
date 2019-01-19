@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group 'fr.alexpado.botregkey'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    jcenter()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'net.dv8tion:JDA:3.8.1_454'
+    compile group: 'org.json', name: 'json', version: '20180813'
+}
+
+jar {
+
+    delete "$projectDir/build"
+
+    baseName 'BotRegKey'
+    destinationDir = file("$buildDir/out")
+    manifest {
+        attributes "Main-Class": "fr.alexpado.botregkey.Bot"
+        attributes "Class-Path": configurations.compile.collect { "libs/" + it.name }.join(" ")
+    }
+    copy {
+        into "$buildDir/out/libs"
+        from configurations.runtime
+    }
+}
